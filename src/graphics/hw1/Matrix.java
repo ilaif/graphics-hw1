@@ -15,18 +15,41 @@ final public class Matrix {
     }
 
     // create matrix based on 2d array
-    public Matrix(double[][] data) {
+    public Matrix(double[][] data, boolean useExisting) {
         M = data.length;
         N = data[0].length;
-        this.data = new double[M][N];
-        for (int i = 0; i < M; i++)
-            for (int j = 0; j < N; j++)
-                this.data[i][j] = data[i][j];
+        if (useExisting) {
+            this.data = data;
+        } else {
+            this.data = new double[M][N];
+            for (int i = 0; i < M; i++)
+                System.arraycopy(data[i], 0, this.data[i], 0, N);
+        }
     }
 
     // copy constructor
     private Matrix(Matrix A) {
-        this(A.data);
+        this(A.data, false);
+    }
+
+    public double get(int i, int j) {
+        return this.data[i][j];
+    }
+
+    public void set(int i, int j, double value) {
+        this.data[i][j] = value;
+    }
+
+    public int getN() {
+        return this.N;
+    }
+
+    public int getM() {
+        return this.M;
+    }
+
+    public double[] getRow(int n) {
+        return this.data[n];
     }
 
     // create and return the N-by-N identity matrix
