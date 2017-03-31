@@ -7,8 +7,23 @@ import java.io.IOException;
 
 public class Main {
 
+    /**
+     * Parses CLI arguments and uses SeamCarver class with the arguments to product processed images.
+     * @param args
+     */
     public static void main(String[] args) {
 
+        //TODO-Ilai: Parse command line arguments.
+
+        //TODO-Ilai: Call Seam Carver on arguments.
+
+        //TODO-Ilai: Save image to output file.
+
+        /////////////////////
+
+        //TODO-Ilai: Show 2 results from vertical and diagonal for 2 different images.
+        //TODO-Ilai: Understand how to increase
+        //TODO-Ilai: Check on two images with interpolation and without
 
         BufferedImage img = null;
         File f = new File("./images/sunset-horizon.jpg");
@@ -23,6 +38,5 @@ public class Main {
         }
 
         System.out.println(img.toString());
-
     }
 }
