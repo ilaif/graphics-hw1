@@ -1,9 +1,6 @@
 package graphics.hw1;
 
-import graphics.hw1.enums.EnergyType;
-
 import java.awt.image.BufferedImage;
-import java.nio.Buffer;
 
 /**
  *

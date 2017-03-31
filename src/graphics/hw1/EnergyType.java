@@ -1,4 +1,4 @@
-package graphics.hw1.enums;
+package graphics.hw1;
 
 public enum EnergyType {
     REGULER,

@@ -1,7 +1,5 @@
 package graphics.hw1;
 
-import graphics.hw1.enums.EnergyType;
-
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
