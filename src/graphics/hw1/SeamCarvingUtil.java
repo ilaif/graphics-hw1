@@ -5,6 +5,12 @@ public class SeamCarvingUtil {
     Matrix mEnergyMatrix;
     Matrix mAccumEnergyMatrix;
 
+    /**
+     * Constructor that builds the accumulated energy matrix given an energy matrix.
+     *
+     * @param energyMatrix Given energy matrix to compute accumulated energy matrix for.
+     * @param isDiagonal   Whether we are computing accumulation allowing diagonal minimization or just vertical lines.
+     */
     public SeamCarvingUtil(Matrix energyMatrix, boolean isDiagonal) {
         mEnergyMatrix = energyMatrix;
         int width = energyMatrix.getN();
@@ -17,14 +23,14 @@ public class SeamCarvingUtil {
         for (y = 0; y < height; y++) {
             for (x = 0; x < width; x++) {
                 min = Double.POSITIVE_INFINITY;
-                if (y == 0) {
+                if (y == 0) { // If we are in the first row then we don't add previous rows
                     min = 0;
                 } else {
                     if (x > 0) min = Math.min(accumEnergyMatrix.get(y - 1, x - 1), min);
                     min = Math.min(accumEnergyMatrix.get(y - 1, x), min);
                     if (x < width - 1) min = Math.min(accumEnergyMatrix.get(y - 1, x + 1), min);
                 }
-                accumEnergyMatrix.set(y, x, min + energyMatrix.get(y, x));
+                accumEnergyMatrix.set(y, x, energyMatrix.get(y, x) + min);
             }
         }
 
@@ -34,7 +40,9 @@ public class SeamCarvingUtil {
     }
 
     /**
-     * @param isVertical
+     * Finds lowest seam in the accumulated energy matrix
+     *
+     * @param isVertical Whether we are looking for a vertical or horizontal seam in the image.
      */
     public int[] findLowestEnergySeam(boolean isVertical) {
 
@@ -42,12 +50,13 @@ public class SeamCarvingUtil {
 
         int height = m.getM();
         int width = m.getN();
-        double[] lastRow = m.getRow(height - 1);
         int[] lowestSeam = new int[height];
         int j, i;
-
         double min = Double.POSITIVE_INFINITY;
         int minIndex = -1;
+
+        // First find the minimum energy in the last row.
+        double[] lastRow = m.getRow(height - 1);
         for (j = 0; j < width; j++) {
             if (lastRow[j] < min) {
                 min = lastRow[j];
@@ -55,6 +64,7 @@ public class SeamCarvingUtil {
             }
         }
 
+        // Iterate upwards from the last row, to find the full minimum energy seam.
         j = minIndex;
         lowestSeam[height - 1] = j;
         for (i = height - 2; i >= 0; i--) {
@@ -79,6 +89,4 @@ public class SeamCarvingUtil {
 
         return lowestSeam;
     }
-
-    //TODO-Ilai: Given the computed DP matrix to find the lowest energy seam.
 }

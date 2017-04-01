@@ -1,5 +1,6 @@
 package graphics.hw1;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.nio.BufferOverflowException;
 
@@ -10,22 +11,30 @@ import java.nio.BufferOverflowException;
  */
 public final class EnergyMatrixUtil {
 
-    private static double getDiff(BufferedImage img, int x1, int y1, int x2, int y2) {
-        if (x2 < 0 || x2 >= img.getWidth() || y2 < 0 || y2 >= img.getHeight()) {
-            return -1;
+    static Matrix getEnergyMatrix(BufferedImage inImg, EnergyType energyType) {
+
+        Matrix m = getGradientMatrix(inImg);
+
+        switch (energyType) {
+            case ENTROPY:
+                // m = m.plus(getEntropyMatrix(inImg));...
+                break;
+            case FORWARD_ENERGY:
+                // m = getForwardEnergyMatrix(inImg);...
+                break;
+            case REGULER:
+            default:
+                m = getGradientMatrix(inImg);
+                break;
         }
-        int clr = img.getRGB(x1, y1);
-        int red1 = (clr & 0x00ff0000) >> 16;
-        int green1 = (clr & 0x0000ff00) >> 8;
-        int blue1 = clr & 0x000000ff;
-        clr = img.getRGB(x2, y2);
-        int red2 = (clr & 0x00ff0000) >> 16;
-        int green2 = (clr & 0x0000ff00) >> 8;
-        int blue2 = clr & 0x000000ff;
-        return (Math.abs(red1 - red2) + Math.abs(blue1 - blue2) + Math.abs(green1 - green2)) / 3;
+
+        //TODO-Roy: Implement adding Entropy by energyType such as: m = m.plus(getEntropy(...))
+
+        return m;
+
     }
 
-    static Matrix getEnergyMatrix(BufferedImage inImg, EnergyType energyType) {
+    private static Matrix getGradientMatrix(BufferedImage inImg) {
 
         int width = inImg.getWidth();
         int height = inImg.getHeight();
@@ -53,5 +62,17 @@ public final class EnergyMatrixUtil {
         return m;
 
         //TODO-Roy: Implement adding Entropy by energyType
+    }
+
+    private static double getDiff(BufferedImage img, int x1, int y1, int x2, int y2) {
+        if (x2 < 0 || x2 >= img.getWidth() || y2 < 0 || y2 >= img.getHeight()) {
+            return -1;
+        }
+        Color c1 = new Color(img.getRGB(x1, y1));
+        Color c2 = new Color(img.getRGB(x2, y2));
+        return (Math.abs(c1.getRed() - c2.getRed()) +
+                Math.abs(c1.getBlue() - c2.getBlue()) +
+                Math.abs(c1.getGreen() - c2.getGreen())
+        ) / 3;
     }
 }

@@ -14,6 +14,8 @@ public class Main {
      */
     public static void main(String[] args) {
 
+        final long start = System.nanoTime();
+
         // Parse arguments
         if (args.length < 5) {
             System.out.println("Error: Not enough arguments: <input image filename> <output # columns> <output # rows> <energy type> <output image filename>");
@@ -70,7 +72,9 @@ public class Main {
             return;
         }
 
+        final long end = System.nanoTime();
         System.out.println("Output file saved successfully");
+        System.out.format("Finished in %d seconds.", (end - start) / 1000000000);
 
         //TODO-Ilai: Show 2 results from vertical and diagonal for 2 different images.
         //TODO-Ilai: Understand how to increase

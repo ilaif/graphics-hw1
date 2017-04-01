@@ -7,7 +7,6 @@ import java.awt.image.BufferedImage;
  */
 public class SeamCarver {
 
-    SeamCarvingUtil mSmcUtil;
     EnergyType mEnergyType;
     BufferedImage mInputImage;
 
@@ -16,6 +15,13 @@ public class SeamCarver {
         mEnergyType = energyType;
     }
 
+    /**
+     * Resize image to desired width and height using seam carving
+     *
+     * @param width Desired width of resulting image.
+     * @param height Desired height of resulting image.
+     * @return Resulting image.
+     */
     public BufferedImage resize(int width, int height) {
 
         int curWidth = mInputImage.getWidth();
@@ -24,9 +30,20 @@ public class SeamCarver {
         int widthChange = width - curWidth;
         int heightChange = height - curHeight;
 
+        //TODO-Roy: Use this to decide if to add or remove seams.
+        // removeHorizontal is true if heightChange is negative, meaning we need to squeeze image, and positive otherwise.
+        boolean removeHorizontal = (heightChange < 0);
+        boolean removeVertical = (widthChange < 0);
+
         int i;
         BufferedImage img = mInputImage;
+        SeamCarvingUtil mSmcUtil;
         int[][] imagePixels;
+        int changesToMake = Math.abs(heightChange) + Math.abs(widthChange);
+        int reportEvery = changesToMake / 10;
+        int changedCou = 0;
+
+        System.out.println("Progress: 0%");
 
         // Horizontal seam removal
         for (i = 0; i < Math.abs(heightChange); i++) {
@@ -35,6 +52,11 @@ public class SeamCarver {
             int[] seam = mSmcUtil.findLowestEnergySeam(false);
             imagePixels = removeSeamFromImage(imageToPixels(img), seam, false);
             img = pixelsToImage(imagePixels);
+            changedCou++;
+
+            if (changedCou % reportEvery == 0) {
+                System.out.format("Progress: %d%%%n", (int) (((float) changedCou / changesToMake) * 100));
+            }
         }
 
         // Vertical seam removal
@@ -44,18 +66,24 @@ public class SeamCarver {
             int[] seam = mSmcUtil.findLowestEnergySeam(true);
             imagePixels = removeSeamFromImage(imageToPixels(img), seam, true);
             img = pixelsToImage(imagePixels);
+            changedCou++;
+
+            if (changedCou % reportEvery == 0) {
+                System.out.format("Progress: %d%%%n", (int) (((float) changedCou / changesToMake) * 100));
+            }
         }
 
         return img;
 
-        //TODO: Need to make this better it's very slow and inefficient
+        //TODO: Need to make this better it's very slow, inefficient and not working properly.
     }
 
-    private int[][] imageToPixels(BufferedImage image) throws IllegalArgumentException {
-        if (image == null) {
-            throw new IllegalArgumentException();
-        }
-
+    /**
+     * Transforms BufferedImage to pixels 2d array.
+     * @param image Input BufferedImage.
+     * @return 2d pixels array.
+     */
+    private int[][] imageToPixels(BufferedImage image) {
         int width = image.getWidth();
         int height = image.getHeight();
         int[][] pixels = new int[height][width];
@@ -65,12 +93,12 @@ public class SeamCarver {
         return pixels;
     }
 
-    public static BufferedImage pixelsToImage(int[][] pixels) throws IllegalArgumentException {
-
-        if (pixels == null) {
-            throw new IllegalArgumentException();
-        }
-
+    /**
+     * Transforms pixels 2d array to BufferedImage.
+     * @param pixels 2d pixels array.
+     * @return Output BufferedImage.
+     */
+    public static BufferedImage pixelsToImage(int[][] pixels) {
         int width = pixels[0].length;
         int height = pixels.length;
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -79,6 +107,8 @@ public class SeamCarver {
         }
         return image;
     }
+
+    //TODO: Add method: addSeamToImage()
 
     private int[][] removeSeamFromImage(int[][] imagePixels, int[] seam, boolean isVertical) {
 
