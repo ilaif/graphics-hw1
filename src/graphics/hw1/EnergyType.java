@@ -1,7 +1,7 @@
 package graphics.hw1;
 
 public enum EnergyType {
-    REGULER,
+    REGULAR,
     ENTROPY,
     FORWARD_ENERGY
 }
