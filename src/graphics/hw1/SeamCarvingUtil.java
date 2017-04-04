@@ -9,9 +9,8 @@ public class SeamCarvingUtil {
      * Constructor that builds the accumulated energy matrix given an energy matrix.
      *
      * @param energyMatrix Given energy matrix to compute accumulated energy matrix for.
-     * @param isDiagonal   Whether we are computing accumulation allowing diagonal minimization or just vertical lines.
      */
-    public SeamCarvingUtil(Matrix energyMatrix, boolean isDiagonal) {
+    public SeamCarvingUtil(Matrix energyMatrix) {
         mEnergyMatrix = energyMatrix;
         int width = energyMatrix.getN();
         int height = energyMatrix.getM();
@@ -43,8 +42,10 @@ public class SeamCarvingUtil {
      * Finds lowest seam in the accumulated energy matrix
      *
      * @param isVertical Whether we are looking for a vertical or horizontal seam in the image.
+     * @param isDiagonal Whether we are computing accumulation allowing diagonal minimization or just vertical lines.
+     * @return lowest energy seam.
      */
-    public int[] findLowestEnergySeam(boolean isVertical) {
+    public int[] findLowestEnergySeam(boolean isVertical, boolean isDiagonal) {
 
         Matrix m = (isVertical) ? mAccumEnergyMatrix : mAccumEnergyMatrix.transpose();
 
@@ -70,7 +71,7 @@ public class SeamCarvingUtil {
         for (i = height - 2; i >= 0; i--) {
             min = Double.POSITIVE_INFINITY;
             minIndex = 0;
-            if (j > 0 && m.get(i, j - 1) < min) {
+            if (j > 0 && m.get(i, j - 1) < min && isDiagonal) {
                 minIndex = j - 1;
                 min = m.get(i, j - 1);
             }
@@ -78,9 +79,8 @@ public class SeamCarvingUtil {
                 minIndex = j;
                 min = m.get(i, j);
             }
-            if (j < width - 1 && m.get(i, j + 1) < min) {
+            if (j < width - 1 && m.get(i, j + 1) < min && isDiagonal) {
                 minIndex = j + 1;
-                //min = m.get(i, j + 1);
             }
 
             lowestSeam[i] = minIndex;
@@ -88,5 +88,9 @@ public class SeamCarvingUtil {
         }
 
         return lowestSeam;
+    }
+
+    public void removeSeamFromAccumEnergyMatrix(int[] seam, boolean isVertical) {
+        mAccumEnergyMatrix = mAccumEnergyMatrix.removeSeam(seam, isVertical);
     }
 }

@@ -18,7 +18,7 @@ public class SeamCarver {
     /**
      * Resize image to desired width and height using seam carving
      *
-     * @param width Desired width of resulting image.
+     * @param width  Desired width of resulting image.
      * @param height Desired height of resulting image.
      * @return Resulting image.
      */
@@ -44,13 +44,18 @@ public class SeamCarver {
         int changedCou = 0;
 
         System.out.println("Progress: 0%");
+        // NOTE: There was a test to calculate the energy and accum energy matrix once and then remove the seam also
+        // from the accum matrix, it brought negative results.
+//        Matrix energyMatrix = EnergyMatrixUtil.getEnergyMatrix(img, mEnergyType);
+//        mSmcUtil = new SeamCarvingUtil(energyMatrix, true);
 
         // Horizontal seam removal
         for (i = 0; i < Math.abs(heightChange); i++) {
             Matrix energyMatrix = EnergyMatrixUtil.getEnergyMatrix(img, mEnergyType);
-            mSmcUtil = new SeamCarvingUtil(energyMatrix, true);
-            int[] seam = mSmcUtil.findLowestEnergySeam(false);
-            imagePixels = removeSeamFromImage(imageToPixels(img), seam, false);
+            mSmcUtil = new SeamCarvingUtil(energyMatrix);
+            int[] seam = mSmcUtil.findLowestEnergySeam(false, true);
+            //mSmcUtil.removeSeamFromAccumEnergyMatrix(seam, false);
+            imagePixels = alterSeamFromImage(imageToPixels(img), seam, false, removeHorizontal);
             img = pixelsToImage(imagePixels);
             changedCou++;
 
@@ -62,9 +67,10 @@ public class SeamCarver {
         // Vertical seam removal
         for (i = 0; i < Math.abs(widthChange); i++) {
             Matrix energyMatrix = EnergyMatrixUtil.getEnergyMatrix(img, mEnergyType);
-            mSmcUtil = new SeamCarvingUtil(energyMatrix, true);
-            int[] seam = mSmcUtil.findLowestEnergySeam(true);
-            imagePixels = removeSeamFromImage(imageToPixels(img), seam, true);
+            mSmcUtil = new SeamCarvingUtil(energyMatrix);
+            int[] seam = mSmcUtil.findLowestEnergySeam(true, true);
+            //mSmcUtil.removeSeamFromAccumEnergyMatrix(seam, true);
+            imagePixels = alterSeamFromImage(imageToPixels(img), seam, true, removeVertical);
             img = pixelsToImage(imagePixels);
             changedCou++;
 
@@ -75,11 +81,12 @@ public class SeamCarver {
 
         return img;
 
-        //TODO: Need to make this better it's very slow, inefficient and not working properly.
+        //TODO: Need to make this better - it's very slow.
     }
 
     /**
      * Transforms BufferedImage to pixels 2d array.
+     *
      * @param image Input BufferedImage.
      * @return 2d pixels array.
      */
@@ -95,6 +102,7 @@ public class SeamCarver {
 
     /**
      * Transforms pixels 2d array to BufferedImage.
+     *
      * @param pixels 2d pixels array.
      * @return Output BufferedImage.
      */
@@ -110,32 +118,36 @@ public class SeamCarver {
 
     //TODO: Add method: addSeamToImage()
 
-    private int[][] removeSeamFromImage(int[][] imagePixels, int[] seam, boolean isVertical) {
+    private int[][] alterSeamFromImage(int[][] imagePixels, int[] seam, boolean isVertical, boolean isRemove) {
 
         int curHeight = imagePixels.length;
         int curWidth = imagePixels[0].length;
-        int height = curHeight - 1;
+        int height = isRemove ? curHeight - 1 : curHeight + 1;
         int width = seam.length;
         if (isVertical) {
             height = seam.length;
-            width = curWidth - 1;
+            width = isRemove ? curWidth - 1 : curWidth + 1;
         }
         int[][] resizedImage = new int[height][width];
-        int[][] removePixels = new int[curHeight][curWidth];
+        int[][] alterPixels = new int[curHeight][curWidth];
         int i, j, k;
 
         if (isVertical) {
             // Mark which pixels to remove
-            removePixels = new int[curHeight][curWidth];
+            alterPixels = new int[curHeight][curWidth];
             for (i = 0; i < seam.length; i++) {
                 j = seam[i];
-                removePixels[i][j] = 1;
+                alterPixels[i][j] = 1;
             }
             // Remove the pixels by creating a new smaller image
             for (i = 0; i < curHeight; i++) {
                 k = 0;
                 for (j = 0; j < curWidth; j++) {
-                    if (removePixels[i][j] == 0) {
+                    if (alterPixels[i][j] == 0) {
+                        resizedImage[i][k++] = imagePixels[i][j];
+                    } else if (!isRemove) {
+                        // TODO: Roy - Blend the added seam by interpolation with its neighbors
+                        resizedImage[i][k++] = imagePixels[i][j];
                         resizedImage[i][k++] = imagePixels[i][j];
                     }
                 }
@@ -144,13 +156,17 @@ public class SeamCarver {
             // Mark which pixels to remove
             for (j = 0; j < seam.length; j++) {
                 i = seam[j];
-                removePixels[i][j] = 1;
+                alterPixels[i][j] = 1;
             }
             // Remove the pixels by creating a new smaller image
             for (j = 0; j < curWidth; j++) {
                 k = 0;
                 for (i = 0; i < curHeight; i++) {
-                    if (removePixels[i][j] == 0) {
+                    if (alterPixels[i][j] == 0) {
+                        resizedImage[k++][j] = imagePixels[i][j];
+                    } else if (!isRemove) {
+                        // TODO: Roy - Blend the added seam by interpolation with its neighbors
+                        resizedImage[k++][j] = imagePixels[i][j];
                         resizedImage[k++][j] = imagePixels[i][j];
                     }
                 }

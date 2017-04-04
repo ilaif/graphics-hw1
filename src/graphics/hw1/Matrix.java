@@ -25,11 +25,6 @@ final public class Matrix {
         }
     }
 
-    // copy constructor
-    private Matrix(Matrix A) {
-        this(A.data, false);
-    }
-
     public double get(int i, int j) {
         return this.data[i][j];
     }
@@ -88,5 +83,54 @@ final public class Matrix {
                 System.out.printf("%9.4f ", data[i][j]);
             System.out.println();
         }
+    }
+
+    public Matrix removeSeam(int[] seam, boolean isVertical) {
+        int curHeight = this.getM();
+        int curWidth = this.getN();
+        int height = curHeight - 1;
+        int width = seam.length;
+        if (isVertical) {
+            height = seam.length;
+            width = curWidth - 1;
+        }
+        double[][] resizedImage = new double[height][width];
+        int[][] removePixels = new int[curHeight][curWidth];
+        int i, j, k;
+
+        if (isVertical) {
+            // Mark which pixels to remove
+            removePixels = new int[curHeight][curWidth];
+            for (i = 0; i < seam.length; i++) {
+                j = seam[i];
+                removePixels[i][j] = 1;
+            }
+            // Remove the pixels by creating a new smaller image
+            for (i = 0; i < curHeight; i++) {
+                k = 0;
+                for (j = 0; j < curWidth; j++) {
+                    if (removePixels[i][j] == 0) {
+                        resizedImage[i][k++] = this.data[i][j];
+                    }
+                }
+            }
+        } else {
+            // Mark which pixels to remove
+            for (j = 0; j < seam.length; j++) {
+                i = seam[j];
+                removePixels[i][j] = 1;
+            }
+            // Remove the pixels by creating a new smaller image
+            for (j = 0; j < curWidth; j++) {
+                k = 0;
+                for (i = 0; i < curHeight; i++) {
+                    if (removePixels[i][j] == 0) {
+                        resizedImage[k++][j] = this.data[i][j];
+                    }
+                }
+            }
+        }
+
+        return new Matrix(resizedImage, true);
     }
 }
