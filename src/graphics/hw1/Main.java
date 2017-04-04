@@ -80,4 +80,25 @@ public class Main {
         //TODO-Ilai: Understand how to increase
         //TODO-Ilai: Check on two images with interpolation and without
     }
+
+    public static void main0(String[] args){
+
+        String inputImageFilepath = args[0];
+        //Load input image
+        BufferedImage inputImage;
+        File inputFile = new File(inputImageFilepath);
+        if (!inputFile.exists()) {
+            System.out.println("Error: File does not exist");
+            return;
+        }
+        try {
+            inputImage = ImageIO.read(inputFile);
+        } catch (IOException error) {
+            System.out.println("Error: Loading image failed. Info: " + error.toString());
+            return;
+        }
+        System.out.println("SABABA EGOZIM");
+
+
+    }
 }
