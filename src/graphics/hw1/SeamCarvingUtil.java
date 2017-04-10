@@ -90,7 +90,8 @@ public class SeamCarvingUtil {
         return lowestSeam;
     }
 
-    public void removeSeamFromAccumEnergyMatrix(int[] seam, boolean isVertical) {
+    public void removeSeam(int[] seam, boolean isVertical) {
         mAccumEnergyMatrix = mAccumEnergyMatrix.removeSeam(seam, isVertical);
+        mEnergyMatrix = mEnergyMatrix.removeSeam(seam, isVertical);
     }
 }

@@ -46,15 +46,16 @@ public class SeamCarver {
         System.out.println("Progress: 0%");
         // NOTE: There was a test to calculate the energy and accum energy matrix once and then remove the seam also
         // from the accum matrix, it brought negative results.
-//        Matrix energyMatrix = EnergyMatrixUtil.getEnergyMatrix(img, mEnergyType);
-//        mSmcUtil = new SeamCarvingUtil(energyMatrix, true);
+        Matrix energyMatrix;// = EnergyMatrixUtil.getEnergyMatrix(img, mEnergyType);
+        //mSmcUtil = new SeamCarvingUtil(energyMatrix);
+        int[] seam;
 
         // Horizontal seam removal
         for (i = 0; i < Math.abs(heightChange); i++) {
-            Matrix energyMatrix = EnergyMatrixUtil.getEnergyMatrix(img, mEnergyType);
+            energyMatrix = EnergyMatrixUtil.getEnergyMatrix(img, mEnergyType);
             mSmcUtil = new SeamCarvingUtil(energyMatrix);
-            int[] seam = mSmcUtil.findLowestEnergySeam(false, true);
-            //mSmcUtil.removeSeamFromAccumEnergyMatrix(seam, false);
+            seam = mSmcUtil.findLowestEnergySeam(false, true);
+            //mSmcUtil.removeSeam(seam, false);
             imagePixels = alterSeamFromImage(imageToPixels(img), seam, false, removeHorizontal);
             img = pixelsToImage(imagePixels);
             changedCou++;
@@ -66,10 +67,10 @@ public class SeamCarver {
 
         // Vertical seam removal
         for (i = 0; i < Math.abs(widthChange); i++) {
-            Matrix energyMatrix = EnergyMatrixUtil.getEnergyMatrix(img, mEnergyType);
+            energyMatrix = EnergyMatrixUtil.getEnergyMatrix(img, mEnergyType);
             mSmcUtil = new SeamCarvingUtil(energyMatrix);
-            int[] seam = mSmcUtil.findLowestEnergySeam(true, true);
-            //mSmcUtil.removeSeamFromAccumEnergyMatrix(seam, true);
+            seam = mSmcUtil.findLowestEnergySeam(true, true);
+            //mSmcUtil.removeSeam(seam, true);
             imagePixels = alterSeamFromImage(imageToPixels(img), seam, true, removeVertical);
             img = pixelsToImage(imagePixels);
             changedCou++;

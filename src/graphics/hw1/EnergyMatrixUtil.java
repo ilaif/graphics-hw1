@@ -19,13 +19,12 @@ public final class EnergyMatrixUtil {
                 //WILL BE ADDED LATER
                 break;
             case ENTROPY:
-                mEntropyMatrix = getEntropyMatrix(inImg);
-                mEnergyMatrix = mEnergyMatrix.plus(mEntropyMatrix);
+                mEnergyMatrix = mEnergyMatrix.plus(getEntropyMatrix(inImg));
             default://==case REGULAR
                 break;
         }
-        return (mEnergyMatrix);
 
+        return mEnergyMatrix;
     }
 
     private static Matrix getGradientMatrix(BufferedImage inImg) {
