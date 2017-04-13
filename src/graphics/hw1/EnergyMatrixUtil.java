@@ -11,7 +11,7 @@ import java.awt.image.BufferedImage;
 public final class EnergyMatrixUtil {
 
     static Matrix getEnergyMatrix(BufferedImage inImg, EnergyType energyType) {
-        Matrix mEnergyMatrix, mEntropyMatrix;
+        Matrix mEnergyMatrix;
         mEnergyMatrix = getGradientMatrix(inImg);
 
         switch (energyType) {
@@ -27,30 +27,6 @@ public final class EnergyMatrixUtil {
         return mEnergyMatrix;
     }
 
-    private static Matrix getGradientMatrix(BufferedImage inImg) {
-        int width = inImg.getWidth();
-        int height = inImg.getHeight();
-        int neighbours;
-        double sumDiff;
-        Matrix mGradientMatrix = new Matrix(height, width);
-
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                neighbours = -1;
-                sumDiff = 0;
-                for (int dx = Math.max(x - 1, 0); dx <= Math.min(x + 1, width - 1); dx++)
-                    for (int dy = Math.max(y - 1, 0); dy <= Math.min(y + 1, height - 1); dy++) {
-                        neighbours++;
-                        sumDiff += getDiff(inImg, x, y, dx, dy);
-                    }
-                mGradientMatrix.set(y, x, (sumDiff / neighbours));
-            }
-        }
-
-        return mGradientMatrix;
-    }
-
-
     private static double getDiff(BufferedImage img, int x1, int y1, int x2, int y2) {
         Color c1 = new Color(img.getRGB(x1, y1));
         Color c2 = new Color(img.getRGB(x2, y2));
@@ -59,6 +35,32 @@ public final class EnergyMatrixUtil {
                 Math.abs(c1.getGreen() - c2.getGreen()))
                 / 3;
 
+    }
+
+    private static double getGradient(BufferedImage inImg, int width, int height, int x, int y) {
+        int neighbours = -1;
+        double sumDiff = 0;
+        for (int dx = Math.max(x - 1, 0); dx <= Math.min(x + 1, width - 1); dx++)
+            for (int dy = Math.max(y - 1, 0); dy <= Math.min(y + 1, height - 1); dy++) {
+                neighbours++;
+                sumDiff += getDiff(inImg, x, y, dx, dy);
+            }
+
+        return sumDiff / neighbours;
+    }
+
+    private static Matrix getGradientMatrix(BufferedImage inImg) {
+        int width = inImg.getWidth();
+        int height = inImg.getHeight();
+        Matrix mGradientMatrix = new Matrix(height, width);
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                mGradientMatrix.set(y, x, getGradient(inImg, width, height, x, y));
+            }
+        }
+
+        return mGradientMatrix;
     }
 
     /**
@@ -89,7 +91,6 @@ public final class EnergyMatrixUtil {
 
         return mEntropyMatrix;
     }
-
 
     /**
      * Calculating the "Pmn" matrix = each pixel replaced with the greyscale value friction out of the

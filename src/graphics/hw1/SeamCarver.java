@@ -43,6 +43,9 @@ public class SeamCarver {
         int reportEvery = changesToMake / 10;
         int changedCou = 0;
 
+        System.out.format("Resizing image of size %dX%d to size %dX%d (Total of %d)\n", curWidth, curHeight,
+                width, height, changesToMake);
+
         System.out.println("Progress: 0%");
         // NOTE: There was a test to calculate the energy and accum energy matrix once and then remove the seam also
         // from the accum matrix, it brought negative results.
