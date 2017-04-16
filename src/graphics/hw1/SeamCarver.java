@@ -66,7 +66,6 @@ class SeamCarver {
         // Vertical seam removal
         mSmcUtil = new SeamCarvingUtil(img, mEnergyType);
         for (i = 0; i < Math.abs(widthChange); i++) {
-            seam = mSmcUtil.findLowestEnergySeam(true);
             mSmcUtil.removeSeam();
             changedCou++;
 
