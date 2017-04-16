@@ -1,53 +1,36 @@
 package graphics.hw1;
 
-public class SeamCarvingUtil {
+import java.awt.image.BufferedImage;
 
-    Matrix mEnergyMatrix;
-    Matrix mAccumEnergyMatrix;
+class SeamCarvingUtil {
+
+    private Matrix mEnergyMatrix;
+    private Matrix mAccumEnergyMatrix;
+    private BufferedImage mImage;
+    private EnergyType mEnergyType;
 
     /**
      * Constructor that builds the accumulated energy matrix given an energy matrix.
-     *
-     * @param energyMatrix Given energy matrix to compute accumulated energy matrix for.
      */
-    public SeamCarvingUtil(Matrix energyMatrix) {
-        mEnergyMatrix = energyMatrix;
-        int width = energyMatrix.getN();
-        int height = energyMatrix.getM();
-        double min;
+    SeamCarvingUtil(BufferedImage img, EnergyType energyType) {
+        mImage = img;
+        mEnergyType = energyType;
 
-        Matrix accumEnergyMatrix = new Matrix(height, width);
+        // Get initial energy matrix
+        mEnergyMatrix = EnergyMatrixUtil.getEnergyMatrix(img, mEnergyType);
 
-        int y, x;
-        for (y = 0; y < height; y++) {
-            for (x = 0; x < width; x++) {
-                min = Double.POSITIVE_INFINITY;
-                if (y == 0) { // If we are in the first row then we don't add previous rows
-                    min = 0;
-                } else {
-                    if (x > 0) min = Math.min(accumEnergyMatrix.get(y - 1, x - 1), min);
-                    min = Math.min(accumEnergyMatrix.get(y - 1, x), min);
-                    if (x < width - 1) min = Math.min(accumEnergyMatrix.get(y - 1, x + 1), min);
-                }
-                accumEnergyMatrix.set(y, x, energyMatrix.get(y, x) + min);
-            }
-        }
-
-        mAccumEnergyMatrix = accumEnergyMatrix;
-
+        this.updateAccumulatedEnergyMatrix();
         //TODO-Roy: Test it and Compute DP vertically down (in addition to the current vertical version).
     }
 
     /**
      * Finds lowest seam in the accumulated energy matrix
      *
-     * @param isVertical Whether we are looking for a vertical or horizontal seam in the image.
      * @param isDiagonal Whether we are computing accumulation allowing diagonal minimization or just vertical lines.
      * @return lowest energy seam.
      */
-    public int[] findLowestEnergySeam(boolean isVertical, boolean isDiagonal) {
-
-        Matrix m = (isVertical) ? mAccumEnergyMatrix : mAccumEnergyMatrix.transpose();
+    int[] findLowestEnergySeam(boolean isDiagonal) {
+        Matrix m = mAccumEnergyMatrix;
 
         int height = m.getM();
         int width = m.getN();
@@ -90,8 +73,41 @@ public class SeamCarvingUtil {
         return lowestSeam;
     }
 
-    public void removeSeam(int[] seam, boolean isVertical) {
-        mAccumEnergyMatrix = mAccumEnergyMatrix.removeSeam(seam, isVertical);
-        mEnergyMatrix = mEnergyMatrix.removeSeam(seam, isVertical);
+    void updateAccumulatedEnergyMatrix() {
+        int width = mEnergyMatrix.getN();
+        int height = mEnergyMatrix.getM();
+        double min;
+
+        Matrix accumEnergyMatrix = new Matrix(height, width);
+
+        int y, x;
+        for (y = 0; y < height; y++) {
+            for (x = 0; x < width; x++) {
+                min = Double.POSITIVE_INFINITY;
+                if (y == 0) { // If we are in the first row then we don't add previous rows
+                    min = 0;
+                } else {
+                    if (x > 0) min = Math.min(accumEnergyMatrix.get(y - 1, x - 1), min);
+                    min = Math.min(accumEnergyMatrix.get(y - 1, x), min);
+                    if (x < width - 1) min = Math.min(accumEnergyMatrix.get(y - 1, x + 1), min);
+                }
+
+                accumEnergyMatrix.set(y, x, mEnergyMatrix.get(y, x) + min);
+            }
+        }
+
+        this.mAccumEnergyMatrix = accumEnergyMatrix;
+    }
+
+    void removeSeam() {
+        int seam[] = findLowestEnergySeam(true);
+        mImage = new Matrix(mImage).removeSeam(seam).toBufferedImage();
+        mEnergyMatrix = mEnergyMatrix.removeSeam(seam);
+        mEnergyMatrix = EnergyMatrixUtil.updateEnergyMatrix(mImage, mEnergyMatrix, seam, mEnergyType);
+        this.updateAccumulatedEnergyMatrix();
+    }
+
+    BufferedImage getImage() {
+        return mImage;
     }
 }

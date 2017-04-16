@@ -5,12 +5,12 @@ import java.awt.image.BufferedImage;
 /**
  *
  */
-public class SeamCarver {
+class SeamCarver {
 
-    EnergyType mEnergyType;
-    BufferedImage mInputImage;
+    private EnergyType mEnergyType;
+    private BufferedImage mInputImage;
 
-    public SeamCarver(BufferedImage inputImage, EnergyType energyType) {
+    SeamCarver(BufferedImage inputImage, EnergyType energyType) {
         mInputImage = inputImage;
         mEnergyType = energyType;
     }
@@ -22,7 +22,7 @@ public class SeamCarver {
      * @param height Desired height of resulting image.
      * @return Resulting image.
      */
-    public BufferedImage resize(int width, int height) {
+    BufferedImage resize(int width, int height) {
 
         int curWidth = mInputImage.getWidth();
         int curHeight = mInputImage.getHeight();
@@ -38,44 +38,36 @@ public class SeamCarver {
         int i;
         BufferedImage img = mInputImage;
         SeamCarvingUtil mSmcUtil;
-        int[][] imagePixels;
         int changesToMake = Math.abs(heightChange) + Math.abs(widthChange);
         int reportEvery = changesToMake / 10;
         int changedCou = 0;
+        int[] seam;
 
         System.out.format("Resizing image of size %dX%d to size %dX%d (Total of %d)\n", curWidth, curHeight,
                 width, height, changesToMake);
 
         System.out.println("Progress: 0%");
         // NOTE: There was a test to calculate the energy and accum energy matrix once and then remove the seam also
-        // from the accum matrix, it brought negative results.
-        Matrix energyMatrix;// = EnergyMatrixUtil.getEnergyMatrix(img, mEnergyType);
-        //mSmcUtil = new SeamCarvingUtil(energyMatrix);
-        int[] seam;
+        // from the accum matrix, it brought bad results.
 
         // Horizontal seam removal
+        mSmcUtil = new SeamCarvingUtil(new Matrix(img).transpose().toBufferedImage(), mEnergyType);
         for (i = 0; i < Math.abs(heightChange); i++) {
-            energyMatrix = EnergyMatrixUtil.getEnergyMatrix(img, mEnergyType);
-            mSmcUtil = new SeamCarvingUtil(energyMatrix);
-            seam = mSmcUtil.findLowestEnergySeam(false, true);
-            //mSmcUtil.removeSeam(seam, false);
-            imagePixels = alterSeamFromImage(imageToPixels(img), seam, false, removeHorizontal);
-            img = pixelsToImage(imagePixels);
+            mSmcUtil.removeSeam();
             changedCou++;
 
             if (changedCou % reportEvery == 0) {
                 System.out.format("Progress: %d%%%n", (int) (((float) changedCou / changesToMake) * 100));
             }
         }
+        // Transpose again
+        img = new Matrix(mSmcUtil.getImage()).transpose().toBufferedImage();
 
         // Vertical seam removal
+        mSmcUtil = new SeamCarvingUtil(img, mEnergyType);
         for (i = 0; i < Math.abs(widthChange); i++) {
-            energyMatrix = EnergyMatrixUtil.getEnergyMatrix(img, mEnergyType);
-            mSmcUtil = new SeamCarvingUtil(energyMatrix);
-            seam = mSmcUtil.findLowestEnergySeam(true, true);
-            //mSmcUtil.removeSeam(seam, true);
-            imagePixels = alterSeamFromImage(imageToPixels(img), seam, true, removeVertical);
-            img = pixelsToImage(imagePixels);
+            seam = mSmcUtil.findLowestEnergySeam(true);
+            mSmcUtil.removeSeam();
             changedCou++;
 
             if (changedCou % reportEvery == 0) {
@@ -83,41 +75,10 @@ public class SeamCarver {
             }
         }
 
-        return img;
+        mInputImage = mSmcUtil.getImage();
 
+        return mInputImage;
         //TODO: Need to make this better - it's very slow.
-    }
-
-    /**
-     * Transforms BufferedImage to pixels 2d array.
-     *
-     * @param image Input BufferedImage.
-     * @return 2d pixels array.
-     */
-    private int[][] imageToPixels(BufferedImage image) {
-        int width = image.getWidth();
-        int height = image.getHeight();
-        int[][] pixels = new int[height][width];
-        for (int row = 0; row < height; row++) {
-            image.getRGB(0, row, width, 1, pixels[row], 0, width);
-        }
-        return pixels;
-    }
-
-    /**
-     * Transforms pixels 2d array to BufferedImage.
-     *
-     * @param pixels 2d pixels array.
-     * @return Output BufferedImage.
-     */
-    public static BufferedImage pixelsToImage(int[][] pixels) {
-        int width = pixels[0].length;
-        int height = pixels.length;
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        for (int row = 0; row < height; row++) {
-            image.setRGB(0, row, width, 1, pixels[row], 0, width);
-        }
-        return image;
     }
 
     //TODO: Add method: addSeamToImage()

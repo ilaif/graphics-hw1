@@ -1,5 +1,7 @@
 package graphics.hw1;
 
+import com.sun.org.apache.xalan.internal.xsltc.dom.MatchingIterator;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
@@ -27,6 +29,25 @@ public final class EnergyMatrixUtil {
         return mEnergyMatrix;
     }
 
+    static Matrix updateEnergyMatrix(BufferedImage inImg, Matrix energyMatrix, int[] seam, EnergyType energyType) {
+        energyMatrix = updateGradientMatrix(inImg, energyMatrix, seam);
+
+        switch (energyType) {
+            case FORWARD_ENERGY:
+                //WILL BE ADDED LATER
+                break;
+            case ENTROPY:
+                //TODO: CONTINUE!
+                energyMatrix = energyMatrix.plus(updateEntropyMatrix(inImg, seam));
+            default://==case REGULAR
+                break;
+        }
+
+        return energyMatrix;
+    }
+
+    // Private
+
     private static double getDiff(BufferedImage img, int x1, int y1, int x2, int y2) {
         Color c1 = new Color(img.getRGB(x1, y1));
         Color c2 = new Color(img.getRGB(x2, y2));
@@ -49,17 +70,53 @@ public final class EnergyMatrixUtil {
         return sumDiff / neighbours;
     }
 
+    private static Matrix updateEntropyMatrix(BufferedImage inImg, int[] seam) {
+        int width = inImg.getWidth();
+        int height = inImg.getHeight();
+        Matrix grayScaleMatrix = getGrayScaleMatrix(inImg);
+        Matrix pmnMatrix = getPartialPmnMatrix(grayScaleMatrix, seam);
+        Matrix entropyMatrix = new Matrix(height, width);
+        double entropy, pmn, loggedPmn;
+
+        for (int y = 0; y < height; y++) {
+            for (int x = Math.max(seam[y] - 4, 0); x <= Math.min(seam[y] + 3, width - 1); x++) {
+                entropy = 0;
+                for (int k = Math.max(x - 4, 0); k <= Math.min(x + 4, width - 1); k++) {
+                    for (int j = Math.max(y - 4, 0); j <= Math.min(y + 4, height - 1); j++) {
+                        pmn = pmnMatrix.get(j, k);
+                        loggedPmn = pmn * Math.log(pmn);
+                        if (loggedPmn > 0) {
+                            entropy -= loggedPmn;
+                        }
+                    }
+                }
+                entropyMatrix.set(y, x, entropy);
+            }
+        }
+
+        return entropyMatrix;
+    }
+
+    private static Matrix updateGradientMatrix(BufferedImage inImg, Matrix energyMatrix, int[] seam) {
+        int width = inImg.getWidth();
+        int height = inImg.getHeight();
+        for (int y = 0; y < height; y++) {
+            for (int x = Math.max(seam[y] - 1, 0); x <= Math.min(seam[y], width - 1); x++) {
+                energyMatrix.set(y, x, getGradient(inImg, width, height, x, y));
+            }
+        }
+        return energyMatrix;
+    }
+
     private static Matrix getGradientMatrix(BufferedImage inImg) {
         int width = inImg.getWidth();
         int height = inImg.getHeight();
         Matrix mGradientMatrix = new Matrix(height, width);
-
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 mGradientMatrix.set(y, x, getGradient(inImg, width, height, x, y));
             }
         }
-
         return mGradientMatrix;
     }
 
@@ -74,7 +131,7 @@ public final class EnergyMatrixUtil {
         int height = inImg.getHeight();
         Matrix mEntropyMatrix = new Matrix(height, width);
         Matrix mPmnMatrix = getPmnMatrix(inImg);
-        double entropy, pmn;
+        double entropy, pmn, loggedPmn;
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
@@ -82,14 +139,30 @@ public final class EnergyMatrixUtil {
                 for (int k = Math.max(x - 4, 0); k <= Math.min(x + 4, width - 1); k++) {
                     for (int j = Math.max(y - 4, 0); j <= Math.min(y + 4, height - 1); j++) {
                         pmn = mPmnMatrix.get(j, k);
-                        entropy -= (pmn * Math.log(pmn));
+                        loggedPmn = pmn * Math.log(pmn);
+                        if (loggedPmn > 0) {
+                            entropy -= loggedPmn;
+                        }
                     }
                 }
+
                 mEntropyMatrix.set(y, x, entropy);
             }
         }
 
         return mEntropyMatrix;
+    }
+
+    private static double getPmn(Matrix grayScaleMatrix, int width, int height, int y, int x) {
+        int neighbours = 0;
+        double gray = grayScaleMatrix.get(y, x);
+        for (int k = Math.max(x - 4, 0); k <= Math.min(x + 4, width - 1); k++) {
+            for (int j = Math.max(y - 4, 0); j <= Math.min(y + 4, height - 1); j++) {
+                neighbours += grayScaleMatrix.get(j, k);
+            }
+        }
+
+        return (gray / neighbours);
     }
 
     /**
@@ -102,27 +175,32 @@ public final class EnergyMatrixUtil {
     private static Matrix getPmnMatrix(BufferedImage inImg) {
         int width = inImg.getWidth();
         int height = inImg.getHeight();
-        double gray, sumNeighboursGray, pmn;
         Matrix mPmnMatrix = new Matrix(height, width);
         Matrix mGrayScaleMatrix = getGrayScaleMatrix(inImg);
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                sumNeighboursGray = 0;
-                gray = mGrayScaleMatrix.get(y, x);
-                for (int k = Math.max(x - 4, 0); k <= Math.min(x + 4, width - 1); k++) {
-                    for (int j = Math.max(y - 4, 0); j <= Math.min(y + 4, height - 1); j++) {
-                        sumNeighboursGray += mGrayScaleMatrix.get(j, k);
-                    }
-                }
-                pmn = gray / sumNeighboursGray;
-                mPmnMatrix.set(y, x, pmn);
+                mPmnMatrix.set(y, x, getPmn(mGrayScaleMatrix, width, height, y, x));
             }
         }
 
         return mPmnMatrix;
     }
 
+    private static Matrix getPartialPmnMatrix(Matrix grayScaleMatrix, int[] seam) {
+        int width = grayScaleMatrix.getN();
+        int height = grayScaleMatrix.getM();
+
+        Matrix pmnMatrix = new Matrix(height, width);
+
+        for (int y = 0; y < height; y++) {
+            for (int x = Math.max(seam[y] - 12, 0); x <= Math.min(seam[y] + 12, width - 1); x++) {
+                pmnMatrix.set(y, x, getPmn(grayScaleMatrix, width, height, y, x));
+            }
+        }
+
+        return pmnMatrix;
+    }
 
     private static Matrix getGrayScaleMatrix(BufferedImage inImg) {
         //calculates grayscale matrix using getGrayScale function.

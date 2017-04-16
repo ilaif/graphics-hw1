@@ -1,5 +1,7 @@
 package graphics.hw1;
 
+import java.awt.image.BufferedImage;
+
 final public class Matrix {
     private final int M;             // number of rows
     private final int N;             // number of columns
@@ -9,19 +11,36 @@ final public class Matrix {
     public Matrix(int M, int N) {
         this.M = M;
         this.N = N;
-        data = new double[M][N];
+        this.data = new double[M][N];
     }
 
     // create matrix based on 2d array
     public Matrix(double[][] data, boolean useExisting) {
-        M = data.length;
-        N = data[0].length;
+        this.M = data.length;
+        this.N = data[0].length;
         if (useExisting) {
             this.data = data;
         } else {
             this.data = new double[M][N];
             for (int i = 0; i < M; i++)
                 System.arraycopy(data[i], 0, this.data[i], 0, N);
+        }
+    }
+
+    /**
+     * Transforms BufferedImage to Matrix.
+     *
+     * @param image BufferedImage.
+     */
+    public Matrix(BufferedImage image) {
+        this.N = image.getWidth();
+        this.M = image.getHeight();
+        this.data = new double[this.M][this.N];
+
+        for (int row = 0; row < this.M; row++) {
+            for (int col = 0; col < this.N; col++) {
+                this.set(row, col, image.getRGB(col, row));
+            }
         }
     }
 
@@ -85,52 +104,41 @@ final public class Matrix {
         }
     }
 
-    public Matrix removeSeam(int[] seam, boolean isVertical) {
+    public Matrix removeSeam(int[] seam) {
         int curHeight = this.getM();
         int curWidth = this.getN();
-        int height = curHeight - 1;
-        int width = seam.length;
-        if (isVertical) {
-            height = seam.length;
-            width = curWidth - 1;
-        }
+        int height = seam.length;
+        int width = curWidth - 1;
         double[][] resizedImage = new double[height][width];
-        int[][] removePixels = new int[curHeight][curWidth];
         int i, j, k;
 
-        if (isVertical) {
-            // Mark which pixels to remove
-            removePixels = new int[curHeight][curWidth];
-            for (i = 0; i < seam.length; i++) {
-                j = seam[i];
-                removePixels[i][j] = 1;
-            }
-            // Remove the pixels by creating a new smaller image
-            for (i = 0; i < curHeight; i++) {
-                k = 0;
-                for (j = 0; j < curWidth; j++) {
-                    if (removePixels[i][j] == 0) {
-                        resizedImage[i][k++] = this.data[i][j];
-                    }
-                }
-            }
-        } else {
-            // Mark which pixels to remove
-            for (j = 0; j < seam.length; j++) {
-                i = seam[j];
-                removePixels[i][j] = 1;
-            }
-            // Remove the pixels by creating a new smaller image
+        // Remove the pixels by creating a new smaller image
+        for (i = 0; i < curHeight; i++) {
+            k = 0;
             for (j = 0; j < curWidth; j++) {
-                k = 0;
-                for (i = 0; i < curHeight; i++) {
-                    if (removePixels[i][j] == 0) {
-                        resizedImage[k++][j] = this.data[i][j];
-                    }
+                if (j != seam[i]) {
+                    resizedImage[i][k++] = this.data[i][j];
                 }
             }
         }
 
         return new Matrix(resizedImage, true);
+    }
+
+    /**
+     * Transforms matrix to BufferedImage.
+     *
+     * @return Output BufferedImage.
+     */
+    public BufferedImage toBufferedImage() {
+        int width = this.getN();
+        int height = this.getM();
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                image.setRGB(col, row, (int) this.get(row, col));
+            }
+        }
+        return image;
     }
 }
