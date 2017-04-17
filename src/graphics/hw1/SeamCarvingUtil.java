@@ -99,11 +99,49 @@ class SeamCarvingUtil {
         this.mAccumEnergyMatrix = accumEnergyMatrix;
     }
 
-    void removeSeam() {
-        int seam[] = findLowestEnergySeam(true);
-        mImage = new Matrix(mImage).removeSeam(seam).toBufferedImage();
-        mEnergyMatrix = mEnergyMatrix.removeSeam(seam);
-        mEnergyMatrix = EnergyMatrixUtil.updateEnergyMatrix(mImage, mEnergyMatrix, seam, mEnergyType);
+    void removeSeams(int seamRemoveAmount, int currentCount, int changesToMake) {
+        int i, reportEvery = changesToMake / 10;
+        int seam[];
+
+        for (i = 0; i < Math.abs(seamRemoveAmount); i++) {
+            seam = findLowestEnergySeam(true);
+            mImage = new Matrix(mImage).removeSeam(seam).toBufferedImage();
+            mEnergyMatrix = mEnergyMatrix.removeSeam(seam);
+            mEnergyMatrix = EnergyMatrixUtil.updateEnergyMatrix(mImage, mEnergyMatrix, seam, mEnergyType);
+            this.updateAccumulatedEnergyMatrix();
+
+            currentCount++;
+            if (currentCount % reportEvery == 0) {
+                System.out.format("Progress: %d%%%n", (int) (((float) currentCount / changesToMake) * 100));
+            }
+        }
+    }
+
+    void addSeams(int seamAddAmount, int currentCount, int changesToMake) {
+        int i, reportEvery = changesToMake / 10;
+        int seams[][] = new int[seamAddAmount][];
+
+        Matrix originalImageMatrix = new Matrix(mImage);
+
+        for (i = 0; i < Math.abs(seamAddAmount); i++) {
+            seams[i] = findLowestEnergySeam(true);
+            mImage = new Matrix(mImage).removeSeam(seams[i]).toBufferedImage();
+            mEnergyMatrix = mEnergyMatrix.removeSeam(seams[i]);
+            mEnergyMatrix = EnergyMatrixUtil.updateEnergyMatrix(mImage, mEnergyMatrix, seams[i], mEnergyType);
+            this.updateAccumulatedEnergyMatrix();
+
+            currentCount++;
+            if (currentCount % reportEvery == 0) {
+                System.out.format("Progress: %d%%%n", (int) (((float) currentCount / changesToMake) * 100));
+            }
+        }
+
+        for (i = 0; i < Math.abs(seamAddAmount); i++) {
+            originalImageMatrix = originalImageMatrix.addSeam(seams[i]);
+        }
+
+        mImage = originalImageMatrix.toBufferedImage();
+        mEnergyMatrix = EnergyMatrixUtil.getEnergyMatrix(mImage, mEnergyType);
         this.updateAccumulatedEnergyMatrix();
     }
 

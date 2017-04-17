@@ -1,6 +1,8 @@
 package graphics.hw1;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 
 final public class Matrix {
     private final int M;             // number of rows
@@ -117,6 +119,59 @@ final public class Matrix {
             k = 0;
             for (j = 0; j < curWidth; j++) {
                 if (j != seam[i]) {
+                    resizedImage[i][k++] = this.data[i][j];
+                }
+            }
+        }
+
+        return new Matrix(resizedImage, true);
+    }
+
+    public int averageColors(ArrayList<Integer> argbColors) {
+        Color c;
+        int size = argbColors.size();
+        double alphaMean = 0, redMean = 0, greenMean = 0, blueMean = 0;
+        for (int rgb : argbColors) {
+            c = new Color(rgb);
+            alphaMean += c.getAlpha();
+            redMean += c.getRed();
+            greenMean += c.getGreen();
+            blueMean += c.getBlue();
+        }
+        alphaMean /= size;
+        redMean /= size;
+        greenMean /= size;
+        blueMean /= size;
+
+        return new Color((int) redMean, (int) greenMean, (int) blueMean, (int) alphaMean).getRGB();
+    }
+
+    public Matrix addSeam(int[] seam) {
+        int curHeight = this.getM();
+        int curWidth = this.getN();
+        int height = seam.length;
+        int width = curWidth + 1;
+        double[][] resizedImage = new double[height][width];
+        int i, j, k;
+        ArrayList<Integer> colors;
+
+        //TODO: Roy - What about the indices?
+
+        for (i = 0; i < curHeight; i++) {
+            k = 0;
+            for (j = 0; j < curWidth; j++) {
+                if (j != seam[i]) {
+                    resizedImage[i][k++] = this.data[i][j];
+                } else {
+                    // TODO: Roy - Make sure the interpolation works
+
+                    colors = new ArrayList<>();
+                    colors.add((int) this.data[i][j]);
+                    if (j > 0) {
+                        colors.add((int) this.data[i][j - 1]);
+                    }
+
+                    resizedImage[i][k++] = averageColors(colors);
                     resizedImage[i][k++] = this.data[i][j];
                 }
             }
