@@ -1,7 +1,5 @@
 package graphics.hw1;
 
-import com.sun.org.apache.xalan.internal.xsltc.dom.MatchingIterator;
-
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
@@ -18,8 +16,6 @@ public final class EnergyMatrixUtil {
 
         switch (energyType) {
             case FORWARD_ENERGY:
-                //WILL BE ADDED LATER
-                break;
             case ENTROPY:
                 mEnergyMatrix = mEnergyMatrix.plus(getEntropyMatrix(inImg));
             default://==case REGULAR
@@ -34,10 +30,7 @@ public final class EnergyMatrixUtil {
 
         switch (energyType) {
             case FORWARD_ENERGY:
-                //WILL BE ADDED LATER
-                break;
             case ENTROPY:
-                //TODO: CONTINUE!
                 energyMatrix = energyMatrix.plus(updateEntropyMatrix(inImg, seam));
             default://==case REGULAR
                 break;
@@ -46,9 +39,7 @@ public final class EnergyMatrixUtil {
         return energyMatrix;
     }
 
-    // Private
-
-    private static double getDiff(BufferedImage img, int x1, int y1, int x2, int y2) {
+    public static double getDiff(BufferedImage img, int x1, int y1, int x2, int y2) {
         Color c1 = new Color(img.getRGB(x1, y1));
         Color c2 = new Color(img.getRGB(x2, y2));
         return (Math.abs(c1.getRed() - c2.getRed()) +
@@ -57,6 +48,8 @@ public final class EnergyMatrixUtil {
                 / 3;
 
     }
+
+    // Private
 
     private static double getGradient(BufferedImage inImg, int width, int height, int x, int y) {
         int neighbours = -1;

@@ -73,9 +73,24 @@ class SeamCarvingUtil {
         return lowestSeam;
     }
 
+    private double getForwardCost(int x, int y, ForwardEnergyDirection direction) {
+        int width = mImage.getWidth();
+        double cost = 0;
+        if (x > 0 && x < width - 1) {
+            EnergyMatrixUtil.getDiff(mImage, x + 1, y, x - 1, y);
+        }
+        if (direction == ForwardEnergyDirection.LEFT && y > 0 && x > 0) {
+            cost += EnergyMatrixUtil.getDiff(mImage, x, y - 1, x - 1, y);
+        } else if (direction == ForwardEnergyDirection.RIGHT && y > 0 && x < width - 1) {
+            cost += EnergyMatrixUtil.getDiff(mImage, x, y - 1, x + 1, y);
+        }
+        return cost;
+    }
+
     void updateAccumulatedEnergyMatrix() {
         int width = mEnergyMatrix.getN();
         int height = mEnergyMatrix.getM();
+        boolean forwardEnergy = (mEnergyType == EnergyType.FORWARD_ENERGY);
         double min;
 
         Matrix accumEnergyMatrix = new Matrix(height, width);
@@ -87,9 +102,12 @@ class SeamCarvingUtil {
                 if (y == 0) { // If we are in the first row then we don't add previous rows
                     min = 0;
                 } else {
-                    if (x > 0) min = Math.min(accumEnergyMatrix.get(y - 1, x - 1), min);
-                    min = Math.min(accumEnergyMatrix.get(y - 1, x), min);
-                    if (x < width - 1) min = Math.min(accumEnergyMatrix.get(y - 1, x + 1), min);
+                    if (x > 0) min = Math.min(accumEnergyMatrix.get(y - 1, x - 1) +
+                            (forwardEnergy ? getForwardCost(x, y, ForwardEnergyDirection.LEFT) : 0), min);
+                    min = Math.min(accumEnergyMatrix.get(y - 1, x) +
+                            (forwardEnergy ? getForwardCost(x, y, ForwardEnergyDirection.UP) : 0), min);
+                    if (x < width - 1) min = Math.min(accumEnergyMatrix.get(y - 1, x + 1) +
+                            (forwardEnergy ? getForwardCost(x, y, ForwardEnergyDirection.RIGHT) : 0), min);
                 }
 
                 accumEnergyMatrix.set(y, x, mEnergyMatrix.get(y, x) + min);
