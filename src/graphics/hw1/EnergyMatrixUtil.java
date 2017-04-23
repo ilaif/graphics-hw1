@@ -32,6 +32,7 @@ public final class EnergyMatrixUtil {
             case FORWARD_ENERGY:
             case ENTROPY:
                 energyMatrix = energyMatrix.plus(updateEntropyMatrix(inImg, seam));
+                break;
             default://==case REGULAR
                 break;
         }

@@ -76,29 +76,6 @@ public class Main {
         System.out.println("Output file saved successfully");
         System.out.format("Finished in %d seconds.", (end - start) / 1000000000);
 
-        //TODO-Ilai: Show 2 results from vertical and diagonal for 2 different images.
-        //TODO-Ilai: Understand how to increase
-        //TODO-Ilai: Check on two images with interpolation and without
-    }
-
-    public static void main0(String[] args){
-
-        String inputImageFilepath = args[0];
-        //Load input image
-        BufferedImage inputImage;
-        File inputFile = new File(inputImageFilepath);
-        if (!inputFile.exists()) {
-            System.out.println("Error: File does not exist");
-            return;
-        }
-        try {
-            inputImage = ImageIO.read(inputFile);
-        } catch (IOException error) {
-            System.out.println("Error: Loading image failed. Info: " + error.toString());
-            return;
-        }
-        System.out.println("SABABA EGOZIM");
-
-
+        //TODO-Ilai: Check on two images with forward energy and without for 2 different images.
     }
 }

@@ -24,13 +24,14 @@ class SeamCarver {
      */
     BufferedImage resize(int width, int height) {
 
+        boolean isDiagonal = true;
+
         int curWidth = mInputImage.getWidth();
         int curHeight = mInputImage.getHeight();
 
         int widthChange = width - curWidth;
         int heightChange = height - curHeight;
 
-        //TODO-Roy: Use this to decide if to add or remove seams.
         // removeHorizontal is true if heightChange is negative, meaning we need to squeeze image, and positive otherwise.
         boolean removeHorizontal = (heightChange < 0);
         boolean removeVertical = (widthChange < 0);
@@ -51,13 +52,13 @@ class SeamCarver {
         mSmcUtil = new SeamCarvingUtil(new Matrix(img).transpose().toBufferedImage(), mEnergyType);
         currentCount = 0;
         if (removeHorizontal) {
-            mSmcUtil.removeSeams(heightChange, currentCount, changesToMake);
+            mSmcUtil.removeSeams(heightChange, currentCount, changesToMake, isDiagonal);
             currentCount += heightChange;
         } else {
             changesLeft = heightChange;
             while (changesLeft > 0) {
                 changes = Math.min(curHeight / 2, changesLeft);
-                mSmcUtil.addSeams(changes, currentCount, changesToMake);
+                mSmcUtil.addSeams(changes, currentCount, changesToMake, isDiagonal);
                 currentCount += changes;
                 changesLeft -= changes;
             }
@@ -66,13 +67,13 @@ class SeamCarver {
         // Vertical seam removal (Transpose again)
         mSmcUtil = new SeamCarvingUtil(new Matrix(mSmcUtil.getImage()).transpose().toBufferedImage(), mEnergyType);
         if (removeVertical) {
-            mSmcUtil.removeSeams(widthChange, currentCount, changesToMake);
+            mSmcUtil.removeSeams(widthChange, currentCount, changesToMake, isDiagonal);
             currentCount += widthChange;
         } else {
             changesLeft = widthChange;
             while (changesLeft > 0) {
                 changes = Math.min(curWidth / 2, changesLeft);
-                mSmcUtil.addSeams(changes, currentCount, changesToMake);
+                mSmcUtil.addSeams(changes, currentCount, changesToMake, isDiagonal);
                 currentCount += changes;
                 changesLeft -= changes;
             }

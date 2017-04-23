@@ -3,6 +3,7 @@ package graphics.hw1;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 final public class Matrix {
     private final int M;             // number of rows
@@ -86,26 +87,6 @@ final public class Matrix {
         return C;
     }
 
-    // return C = A - B
-    public Matrix minus(Matrix B) {
-        Matrix A = this;
-        if (B.M != A.M || B.N != A.N) throw new RuntimeException("Illegal matrix dimensions.");
-        Matrix C = new Matrix(M, N);
-        for (int i = 0; i < M; i++)
-            for (int j = 0; j < N; j++)
-                C.data[i][j] = A.data[i][j] - B.data[i][j];
-        return C;
-    }
-
-    // print matrix to standard output
-    public void show() {
-        for (int i = 0; i < M; i++) {
-            for (int j = 0; j < N; j++)
-                System.out.printf("%9.4f ", data[i][j]);
-            System.out.println();
-        }
-    }
-
     public Matrix removeSeam(int[] seam) {
         int curHeight = this.getM();
         int curWidth = this.getN();
@@ -146,38 +127,46 @@ final public class Matrix {
         return new Color((int) redMean, (int) greenMean, (int) blueMean, (int) alphaMean).getRGB();
     }
 
-    public Matrix addSeam(int[] seam) {
-        int curHeight = this.getM();
-        int curWidth = this.getN();
-        int height = seam.length;
-        int width = curWidth + 1;
-        double[][] resizedImage = new double[height][width];
-        int i, j, k;
+    int[] getSortedRow(int seams[][], int rowIndex) {
+        int k = seams.length;
+        int row[] = new int[k];
+        for (int i = 0; i < k; i++) {
+            row[i] = seams[i][rowIndex];
+        }
+        Arrays.sort(row);
+        return row;
+    }
+
+    public Matrix addSeams(int[][] seams) {
         ArrayList<Integer> colors;
-
-        //TODO: Roy - What about the indices?
-
-        for (i = 0; i < curHeight; i++) {
+        int i, k, l, j;
+        int seamAddAmount = seams.length;
+        int rowNum = this.getM();
+        int colNum = this.getN();
+        int sortedRow[];
+        double recoveredImage[][] = new double[rowNum][colNum + seamAddAmount];
+        for (i = 0; i < rowNum; i++) {
+            sortedRow = getSortedRow(seams, i);
             k = 0;
-            for (j = 0; j < curWidth; j++) {
-                if (j != seam[i]) {
-                    resizedImage[i][k++] = this.data[i][j];
-                } else {
-                    // TODO: Roy - Make sure the interpolation works
+            l = 0;
+            for (j = 0; j < colNum; j++) {
+                if (l < seamAddAmount && j == sortedRow[l]) {
 
                     colors = new ArrayList<>();
                     colors.add((int) this.data[i][j]);
                     if (j > 0) {
                         colors.add((int) this.data[i][j - 1]);
                     }
+                    recoveredImage[i][k++] = averageColors(colors);
 
-                    resizedImage[i][k++] = averageColors(colors);
-                    resizedImage[i][k++] = this.data[i][j];
+                    recoveredImage[i][k++] = this.get(i, j);
+                    l++;
+                } else {
+                    recoveredImage[i][k++] = this.get(i, j);
                 }
             }
         }
-
-        return new Matrix(resizedImage, true);
+        return new Matrix(recoveredImage, true);
     }
 
     /**

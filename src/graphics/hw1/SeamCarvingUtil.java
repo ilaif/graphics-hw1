@@ -1,6 +1,7 @@
 package graphics.hw1;
 
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 
 class SeamCarvingUtil {
 
@@ -20,7 +21,6 @@ class SeamCarvingUtil {
         mEnergyMatrix = EnergyMatrixUtil.getEnergyMatrix(img, mEnergyType);
 
         this.updateAccumulatedEnergyMatrix();
-        //TODO-Roy: Test it and Compute DP vertically down (in addition to the current vertical version).
     }
 
     /**
@@ -77,7 +77,7 @@ class SeamCarvingUtil {
         int width = mImage.getWidth();
         double cost = 0;
         if (x > 0 && x < width - 1) {
-            EnergyMatrixUtil.getDiff(mImage, x + 1, y, x - 1, y);
+            cost += EnergyMatrixUtil.getDiff(mImage, x + 1, y, x - 1, y);
         }
         if (direction == ForwardEnergyDirection.LEFT && y > 0 && x > 0) {
             cost += EnergyMatrixUtil.getDiff(mImage, x, y - 1, x - 1, y);
@@ -117,12 +117,12 @@ class SeamCarvingUtil {
         this.mAccumEnergyMatrix = accumEnergyMatrix;
     }
 
-    void removeSeams(int seamRemoveAmount, int currentCount, int changesToMake) {
+    void removeSeams(int seamRemoveAmount, int currentCount, int changesToMake, boolean isDiagonal) {
         int i, reportEvery = changesToMake / 10;
         int seam[];
 
         for (i = 0; i < Math.abs(seamRemoveAmount); i++) {
-            seam = findLowestEnergySeam(true);
+            seam = findLowestEnergySeam(isDiagonal);
             mImage = new Matrix(mImage).removeSeam(seam).toBufferedImage();
             mEnergyMatrix = mEnergyMatrix.removeSeam(seam);
             mEnergyMatrix = EnergyMatrixUtil.updateEnergyMatrix(mImage, mEnergyMatrix, seam, mEnergyType);
@@ -135,14 +135,33 @@ class SeamCarvingUtil {
         }
     }
 
-    void addSeams(int seamAddAmount, int currentCount, int changesToMake) {
+    int[][] recoverOriginalSeamIndices(int seams[][]) {
+        int k = seams.length;
+        int m = seams[0].length;
+        int recoveredSeams[][] = new int[k][m];
+        int recovered_index;
+        for (int i = 0; i < m; i++) {  // Fix every row
+            for (int j = 0; j < k; j++) {  // A whole seams
+                recovered_index = seams[j][i];
+                for (int l = j - 1; l >= 0; l--) {  // Fix seam's pixels one by one.
+                    if (seams[l][i] <= recovered_index) {
+                        recovered_index++;
+                    }
+                }
+                recoveredSeams[j][i] = recovered_index;
+            }
+        }
+        return recoveredSeams;
+    }
+
+    void addSeams(int seamAddAmount, int currentCount, int changesToMake, boolean isDiagonal) {
         int i, reportEvery = changesToMake / 10;
         int seams[][] = new int[seamAddAmount][];
 
         Matrix originalImageMatrix = new Matrix(mImage);
 
         for (i = 0; i < Math.abs(seamAddAmount); i++) {
-            seams[i] = findLowestEnergySeam(true);
+            seams[i] = findLowestEnergySeam(isDiagonal);
             mImage = new Matrix(mImage).removeSeam(seams[i]).toBufferedImage();
             mEnergyMatrix = mEnergyMatrix.removeSeam(seams[i]);
             mEnergyMatrix = EnergyMatrixUtil.updateEnergyMatrix(mImage, mEnergyMatrix, seams[i], mEnergyType);
@@ -154,11 +173,9 @@ class SeamCarvingUtil {
             }
         }
 
-        for (i = 0; i < Math.abs(seamAddAmount); i++) {
-            originalImageMatrix = originalImageMatrix.addSeam(seams[i]);
-        }
+        seams = recoverOriginalSeamIndices(seams);
 
-        mImage = originalImageMatrix.toBufferedImage();
+        mImage = originalImageMatrix.addSeams(seams).toBufferedImage();
         mEnergyMatrix = EnergyMatrixUtil.getEnergyMatrix(mImage, mEnergyType);
         this.updateAccumulatedEnergyMatrix();
     }
